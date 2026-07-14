@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDFアップロード</title>
+  <style>
+    :root {
+      --bg: #f7f6f2;
+      --card: #ffffff;
+      --card-sub: #fdfcf9;
+      --text: #28251d;
+      --muted: #6f6b63;
+      --border: #ded9d1;
+      --primary: #01696f;
+      --primary-hover: #0c4e54;
+      --primary-soft: #e7f3f3;
+      --shadow: 0 10px 30px rgba(40, 37, 29, 0.08);
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 16px 56px;
+    }
+
+    .hero {
+      margin-bottom: 24px;
+    }
+
+    .hero-title {
+      margin: 0 0 10px;
+      font-size: 34px;
+      font-weight: 700;
+    }
+
+    .hero-text {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 720px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    .section-title {
+      margin: 0 0 8px;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .section-text {
+      margin: 0 0 20px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .upload-box {
+      margin-top: 20px;
+      padding: 28px;
+      border: 2px dashed #cfc7bc;
+      border-radius: 14px;
+      background: var(--card-sub);
+      text-align: center;
+      transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .upload-box.dragover {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      box-shadow: 0 0 0 4px rgba(1, 105, 111, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .upload-title {
+      margin: 0 0 6px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .upload-subtitle {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .upload-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .select-button,
+    .submit-button {
+      display: inline-block;
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: 0.2s ease;
+    }
+
+    .select-button {
+      background: #ffffff;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .select-button:hover {
+      background: #f5f2ed;
+    }
+
+    .submit-button {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+    }
+
+    .submit-button:hover {
+      background: var(--primary-hover);
+    }
+
+    .submit-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .file-list {
+      text-align: left;
+      margin-top: 10px;
+      padding: 14px 16px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      font-size: 14px;
+      min-height: 56px;
+    }
+
+    .file-list ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .file-list li {
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .note {
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .info-item {
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .info-item-title {
+      margin: 0 0 6px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .info-item-text {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 768px) {
+      .hero-title {
+        font-size: 28px;
+      }
+
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        padding: 28px 14px 40px;
+      }
+
+      .card {
+        padding: 18px;
+      }
+
+      .upload-box {
+        padding: 20px 16px;
+      }
+
+      .upload-title {
+        font-size: 18px;
+      }
+
+      .upload-actions {
+        flex-direction: column;
+      }
+
+      .select-button,
+      .submit-button {
+        width: 100%;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header class="hero">
+      <h1 class="hero-title">PDFアップロード</h1>
+      <p class="hero-text">
+        PDFファイルをアップロードして、印刷用の順番調整・奇数ページ確認・結合出力をまとめて行えます。
+      </p>
+    </header>
+
+    <section class="card">
+      <h2 class="section-title">PDFをアップロード</h2>
+      <p class="section-text">
+        PDFファイルをドラッグ&ドロップするか、ファイル選択ボタンから追加してください。
+      </p>
+
+      <form action="{{ url_for('upload') }}" method="POST" enctype="multipart/form-data" id="upload-form">
+        <div class="upload-box" id="drop-zone">
+          <p class="upload-title">PDFファイルをここに追加</p>
+          <p class="upload-subtitle">複数ファイルをまとめて選択できます。同名ファイルは自動で別名保存します。</p>
+
+          <input
+            class="file-input"
+            type="file"
+            name="pdf_files"
+            id="pdf_files"
+            multiple
+            accept=".pdf,application/pdf"
+          >
+
+          <div class="upload-actions">
+            <label for="pdf_files" class="select-button">ファイルを選択</label>
+            <button class="submit-button" type="submit" id="submit-button" disabled>アップロードして確認</button>
+          </div>
+
+          <div class="file-list" id="file-list">まだファイルが選択されていません。</div>
+        </div>
+
+        <p class="note">
+          アップロード後の一覧画面で、順番変更・個別削除・一括削除ができます。
+        </p>
+      </form>
+
+      <div class="info-grid">
+        <div class="info-item">
+          <h3 class="info-item-title">複数ファイル対応</h3>
+          <p class="info-item-text">複数のPDFをまとめて選択して、一度に確認できます。</p>
+        </div>
+        <div class="info-item">
+          <h3 class="info-item-title">PDFのみ受付</h3>
+          <p class="info-item-text">PDF以外のファイルは自動的に除外されます。</p>
+        </div>
+        <div class="info-item">
+          <h3 class="info-item-title">印刷前チェック向け</h3>
+          <p class="info-item-text">ページ数や奇数ページの資料を事前に確認できます。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const dropZone = document.getElementById("drop-zone");
+    const fileInput = document.getElementById("pdf_files");
+    const fileList = document.getElementById("file-list");
+    const submitButton = document.getElementById("submit-button");
+
+    function filterPdfFiles(files) {
+      return Array.from(files).filter((file) => {
+        return file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+      });
+    }
+
+    function updateFileList(files) {
+      if (!files || files.length === 0) {
+        fileList.textContent = "まだファイルが選択されていません。";
+        submitButton.disabled = true;
+        return;
+      }
+
+      const list = document.createElement("ul");
+
+      Array.from(files).forEach((file) => {
+        const li = document.createElement("li");
+        li.textContent = `${file.name}（${Math.ceil(file.size / 1024)} KB）`;
+        list.appendChild(li);
+      });
+
+      fileList.innerHTML = "";
+      fileList.appendChild(list);
+      submitButton.disabled = false;
+    }
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.add("dragover");
+      });
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove("dragover");
+      });
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+      const pdfFiles = filterPdfFiles(e.dataTransfer.files);
+
+      if (pdfFiles.length === 0) {
+        fileList.textContent = "PDFファイルを選択してください。";
+        submitButton.disabled = true;
+        return;
+      }
+
+      const dt = new DataTransfer();
+      pdfFiles.forEach((file) => dt.items.add(file));
+      fileInput.files = dt.files;
+      updateFileList(fileInput.files);
+    });
+
+    fileInput.addEventListener("change", () => {
+      const pdfFiles = filterPdfFiles(fileInput.files);
+      const dt = new DataTransfer();
+      pdfFiles.forEach((file) => dt.items.add(file));
+      fileInput.files = dt.files;
+      updateFileList(fileInput.files);
+    });
+  </script>
+</body>
+</html>

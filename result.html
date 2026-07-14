@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF順番調整</title>
+  <style>
+    :root {
+      --bg: #f7f6f2;
+      --card: #ffffff;
+      --card-sub: #fdfcf9;
+      --text: #28251d;
+      --muted: #6f6b63;
+      --border: #ded9d1;
+      --primary: #01696f;
+      --primary-hover: #0c4e54;
+      --secondary: #ffffff;
+      --secondary-hover: #f4f1eb;
+      --danger: #964219;
+      --danger-soft: #fff7f4;
+      --shadow: 0 10px 30px rgba(40, 37, 29, 0.08);
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 36px 16px 56px;
+    }
+
+    .page-header {
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      margin: 0 0 8px;
+      font-size: 32px;
+      font-weight: 700;
+    }
+
+    .page-description {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 760px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    .panel-title {
+      margin: 0 0 8px;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .panel-subtitle {
+      margin: 0 0 20px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .setting-box {
+      margin-bottom: 16px;
+      padding: 14px 16px;
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .setting-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .setting-note {
+      margin: 8px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .filename-box {
+      margin-bottom: 20px;
+      padding: 14px 16px;
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .filename-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .filename-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      background: #ffffff;
+      color: var(--text);
+    }
+
+    .filename-help {
+      margin: 8px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .utility-box {
+      margin-bottom: 20px;
+      padding: 16px;
+      background: #fffaf7;
+      border: 1px solid #ecdccf;
+      border-radius: 12px;
+    }
+
+    .utility-title {
+      margin: 0 0 6px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--danger);
+    }
+
+    .utility-text {
+      margin: 0 0 12px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .pdf-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .pdf-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+
+    .pdf-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .pdf-order {
+      display: inline-block;
+      margin-bottom: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+
+    .pdf-name {
+      margin: 0 0 4px;
+      font-size: 16px;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .pdf-pages {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .pdf-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    .move-btn,
+    .delete-btn,
+    .danger-btn {
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .move-btn {
+      border: 1px solid var(--border);
+      background: var(--secondary);
+      color: var(--text);
+    }
+
+    .move-btn:hover {
+      background: var(--secondary-hover);
+    }
+
+    .move-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .delete-btn,
+    .danger-btn {
+      border: 1px solid #d8c7be;
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .delete-btn:hover,
+    .danger-btn:hover {
+      background: #f8ebe3;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+      display: inline-block;
+      text-decoration: none;
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .primary-btn {
+      border: none;
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .primary-btn:hover {
+      background: var(--primary-hover);
+    }
+
+    .secondary-btn {
+      border: 1px solid var(--border);
+      background: #ffffff;
+      color: var(--text);
+    }
+
+    .secondary-btn:hover {
+      background: var(--secondary-hover);
+    }
+
+    .empty-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    .empty-title {
+      margin: 0 0 8px;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .empty-text {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 640px) {
+      .page-title {
+        font-size: 26px;
+      }
+
+      .panel {
+        padding: 18px;
+      }
+
+      .pdf-item {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .pdf-actions {
+        width: 100%;
+      }
+
+      .move-btn,
+      .delete-btn,
+      .danger-btn {
+        flex: 1;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      .primary-btn,
+      .secondary-btn {
+        width: 100%;
+        text-align: center;
+      }
+
+      .setting-label {
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="page-header">
+      <h1 class="page-title">PDF順番調整</h1>
+      <p class="page-description">
+        アップロードしたPDFだけを表示しています。上下ボタンで並び替え、不要なものは削除してから次へ進んでください。
+      </p>
+    </header>
+
+    {% if pdf_list and pdf_list|length > 0 %}
+      <section class="panel">
+        <h2 class="panel-title">PDF一覧</h2>
+        <p class="panel-subtitle">
+          並び順の調整、不要なPDFの削除、出力ファイル名の指定をしてから確認画面へ進みます。
+        </p>
+
+        <form action="{{ url_for('select') }}" method="POST" id="order-form">
+          <div class="setting-box">
+            <label class="setting-label">
+              <input
+                type="checkbox"
+                name="insert_blank_pages"
+                {% if insert_blank_pages %}checked{% endif %}
+                style="transform: scale(1.1);"
+              >
+              奇数ページPDFの後に空白ページを自動挿入する
+            </label>
+            <p class="setting-note">
+              両面印刷で次の資料を表面から始めやすくするための設定です。
+            </p>
+          </div>
+
+          <div class="filename-box">
+            <label class="filename-label" for="output_filename">結合PDFのファイル名</label>
+            <input
+              type="text"
+              id="output_filename"
+              name="output_filename"
+              class="filename-input"
+              value="merged_output.pdf"
+              placeholder="例: 会議資料まとめ.pdf"
+            >
+            <p class="filename-help">拡張子 .pdf は省略しても大丈夫です。</p>
+          </div>
+
+          <div class="utility-box">
+            <p class="utility-title">一覧を空にして選び直す</p>
+            <p class="utility-text">
+              今回アップロードしたPDFを一覧からまとめて外します。別のPDFでやり直したい時に使ってください。
+            </p>
+            <button type="button" class="danger-btn" id="delete-all-btn">一覧を空にする</button>
+          </div>
+
+          <div class="pdf-list" id="pdf-list">
+            {% for pdf in pdf_list %}
+              <div class="pdf-item" data-filename="{{ pdf.filename }}" data-pages="{{ pdf.pages }}">
+                <div class="pdf-info">
+                  <span class="pdf-order">{{ loop.index }}</span>
+                  <h3 class="pdf-name">{{ pdf.filename }}</h3>
+                  <p class="pdf-pages">{{ pdf.pages }} ページ</p>
+                </div>
+
+                <div class="pdf-actions">
+                  <button type="button" class="move-btn move-up">↑ 上へ</button>
+                  <button type="button" class="move-btn move-down">↓ 下へ</button>
+                  <button type="button" class="delete-btn delete-trigger" data-filename="{{ pdf.filename }}">削除</button>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+
+          <div id="hidden-inputs"></div>
+
+          <div class="actions">
+            <button type="submit" class="primary-btn">この順番で進む</button>
+            <a href="{{ url_for('index') }}" class="secondary-btn">アップロード画面に戻る</a>
+          </div>
+        </form>
+      </section>
+    {% else %}
+      <div class="empty-box">
+        <h2 class="empty-title">一覧を空にしました</h2>
+        <p class="empty-text">
+          表示中のPDFはすべて一覧から外れました。別のPDFを選んでやり直してください。
+        </p>
+        <div class="actions" style="margin-top: 16px;">
+          <a href="{{ url_for('index') }}" class="secondary-btn">アップロード画面へ戻る</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <script>
+    const pdfList = document.getElementById("pdf-list");
+    const hiddenInputs = document.getElementById("hidden-inputs");
+    const orderForm = document.getElementById("order-form");
+    const deleteAllBtn = document.getElementById("delete-all-btn");
+
+    function refreshOrderLabels() {
+      if (!pdfList) return;
+
+      const items = pdfList.querySelectorAll(".pdf-item");
+
+      items.forEach((item, index) => {
+        const orderLabel = item.querySelector(".pdf-order");
+        const upButton = item.querySelector(".move-up");
+        const downButton = item.querySelector(".move-down");
+
+        orderLabel.textContent = index + 1;
+        upButton.disabled = index === 0;
+        downButton.disabled = index === items.length - 1;
+      });
+    }
+
+    function rebuildHiddenInputs() {
+      if (!pdfList || !hiddenInputs) return;
+
+      hiddenInputs.innerHTML = "";
+
+      const items = pdfList.querySelectorAll(".pdf-item");
+      items.forEach((item) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "selected_pdf";
+        input.value = `${item.dataset.filename}|${item.dataset.pages}`;
+        hiddenInputs.appendChild(input);
+      });
+    }
+
+    function moveUp(item) {
+      const prev = item.previousElementSibling;
+      if (!prev) return;
+
+      pdfList.insertBefore(item, prev);
+      refreshOrderLabels();
+      rebuildHiddenInputs();
+    }
+
+    function moveDown(item) {
+      const next = item.nextElementSibling;
+      if (!next) return;
+
+      pdfList.insertBefore(next, item);
+      refreshOrderLabels();
+      rebuildHiddenInputs();
+    }
+
+    function appendCommonInputs(form) {
+      const insertBlankCheckbox = orderForm.querySelector('input[name="insert_blank_pages"]');
+      if (insertBlankCheckbox && insertBlankCheckbox.checked) {
+        const blankInput = document.createElement("input");
+        blankInput.type = "hidden";
+        blankInput.name = "insert_blank_pages";
+        blankInput.value = "on";
+        form.appendChild(blankInput);
+      }
+
+      const items = pdfList.querySelectorAll(".pdf-item");
+      items.forEach((item) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "current_pdf";
+        input.value = `${item.dataset.filename}|${item.dataset.pages}`;
+        form.appendChild(input);
+      });
+    }
+
+    function submitDelete(filename) {
+      const confirmed = confirm(`「${filename}」を削除しますか？`);
+      if (!confirmed) return;
+
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = "{{ url_for('delete_pdf') }}";
+
+      const filenameInput = document.createElement("input");
+      filenameInput.type = "hidden";
+      filenameInput.name = "filename_to_delete";
+      filenameInput.value = filename;
+      form.appendChild(filenameInput);
+
+      appendCommonInputs(form);
+
+      document.body.appendChild(form);
+      form.submit();
+    }
+
+    function submitDeleteAll() {
+      const confirmed = confirm("一覧を空にして、今回アップロードしたPDFをまとめて外します。よろしいですか？");
+      if (!confirmed) return;
+
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = "{{ url_for('delete_all_pdfs') }}";
+
+      appendCommonInputs(form);
+
+      document.body.appendChild(form);
+      form.submit();
+    }
+
+    if (pdfList) {
+      pdfList.addEventListener("click", (e) => {
+        const target = e.target;
+
+        if (target.classList.contains("move-up")) {
+          const item = target.closest(".pdf-item");
+          if (item) moveUp(item);
+        }
+
+        if (target.classList.contains("move-down")) {
+          const item = target.closest(".pdf-item");
+          if (item) moveDown(item);
+        }
+
+        if (target.classList.contains("delete-trigger")) {
+          submitDelete(target.dataset.filename);
+        }
+      });
+
+      refreshOrderLabels();
+      rebuildHiddenInputs();
+    }
+
+    if (deleteAllBtn) {
+      deleteAllBtn.addEventListener("click", submitDeleteAll);
+    }
+
+    if (orderForm) {
+      orderForm.addEventListener("submit", rebuildHiddenInputs);
+    }
+  </script>
+</body>
+</html>

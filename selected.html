@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF確認結果</title>
+  <style>
+    :root {
+      --bg: #f7f6f2;
+      --card: #ffffff;
+      --card-sub: #fdfcf9;
+      --text: #28251d;
+      --muted: #6f6b63;
+      --border: #ded9d1;
+      --primary: #01696f;
+      --primary-hover: #0c4e54;
+      --warning: #964219;
+      --warning-soft: #f8ebe3;
+      --success: #3f6b46;
+      --success-soft: #ebf4ec;
+      --shadow: 0 10px 30px rgba(40, 37, 29, 0.08);
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 16px 48px;
+    }
+
+    .page-header {
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      margin: 0 0 8px;
+      font-size: 32px;
+      font-weight: 700;
+    }
+
+    .page-description {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .summary-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .summary-label {
+      margin: 0 0 6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .summary-value {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .panel h2 {
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-size: 20px;
+    }
+
+    .filename-box {
+      margin-bottom: 20px;
+      padding: 14px 16px;
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .filename-label {
+      margin: 0 0 8px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .filename-value {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+    }
+
+    th,
+    td {
+      padding: 14px 12px;
+      border-bottom: 1px solid #ece7e0;
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+
+    th {
+      background: var(--card-sub);
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    tr.warning-row {
+      background: #fffaf7;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .badge-normal {
+      background: var(--success-soft);
+      color: var(--success);
+    }
+
+    .badge-warning {
+      background: var(--warning-soft);
+      color: var(--warning);
+    }
+
+    .note-list {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .note-list li {
+      margin-bottom: 10px;
+    }
+
+    .subtext {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .actions {
+      margin-top: 24px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .back-link,
+    .sub-link,
+    .download-btn {
+      display: inline-block;
+      text-decoration: none;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 15px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .back-link,
+    .download-btn {
+      background: var(--primary);
+      color: white;
+    }
+
+    .back-link:hover,
+    .download-btn:hover {
+      background: var(--primary-hover);
+    }
+
+    .sub-link {
+      background: white;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .sub-link:hover {
+      background: #f5f2ed;
+    }
+
+    .empty-message {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .download-form {
+      margin: 0;
+    }
+
+    @media (max-width: 640px) {
+      .page-title {
+        font-size: 26px;
+      }
+
+      .summary-value {
+        font-size: 24px;
+      }
+
+      .panel {
+        padding: 16px;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      .back-link,
+      .sub-link,
+      .download-btn {
+        width: 100%;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="page-header">
+      <h1 class="page-title">PDF確認結果</h1>
+      <p class="page-description">
+        並び順とページ数の確認結果です。印刷前の最終確認に使ってください。
+      </p>
+    </header>
+
+    {% if selected_pdf_list %}
+      <section class="summary-grid">
+        <div class="summary-card">
+          <p class="summary-label">選択したPDF数</p>
+          <p class="summary-value">{{ selected_pdf_list|length }} 件</p>
+        </div>
+        <div class="summary-card">
+          <p class="summary-label">合計ページ数</p>
+          <p class="summary-value">{{ total_pages }} ページ</p>
+        </div>
+        <div class="summary-card">
+          <p class="summary-label">空白ページ反映数</p>
+          <p class="summary-value">{{ blank_pages_count }} ページ</p>
+        </div>
+        <div class="summary-card">
+          <p class="summary-label">想定総ページ数</p>
+          <p class="summary-value">{{ estimated_total_pages }} ページ</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>出力ファイル名</h2>
+        <div class="filename-box">
+          <p class="filename-label">保存されるファイル名</p>
+          <p class="filename-value">{{ output_filename }}</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>空白ページ自動挿入設定</h2>
+        {% if insert_blank_pages %}
+          <p>空白ページ自動挿入は ON です。候補 {{ suggested_blank_pages_count }} ページを合計に反映しています。</p>
+        {% else %}
+          <p>空白ページ自動挿入は OFF です。候補は表示していますが、合計ページ数には反映していません。</p>
+        {% endif %}
+      </section>
+
+      <section class="panel">
+        <h2>PDF一覧</h2>
+        <div class="table-wrap">
+          <table>
+            <tr>
+              <th>順番</th>
+              <th>ファイル名</th>
+              <th>ページ数</th>
+              <th>注意</th>
+            </tr>
+            {% for pdf in selected_pdf_list %}
+              <tr class="{% if pdf.is_odd %}warning-row{% endif %}">
+                <td>{{ pdf.order }}</td>
+                <td>{{ pdf.filename }}</td>
+                <td>{{ pdf.pages }}</td>
+                <td>
+                  {% if pdf.is_odd %}
+                    <span class="badge badge-warning">奇数ページ</span>
+                  {% else %}
+                    <span class="badge badge-normal">問題なし</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </table>
+        </div>
+        <p class="subtext">
+          奇数ページのPDFは、両面印刷時に次の資料が裏面から始まる可能性があります。
+        </p>
+      </section>
+
+      <section class="panel">
+        <h2>奇数ページPDF</h2>
+        {% if odd_pdfs %}
+          <ul class="note-list">
+            {% for pdf in odd_pdfs %}
+              <li>{{ pdf.filename }}（{{ pdf.pages }}ページ）</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p>奇数ページのPDFはありません。</p>
+        {% endif %}
+      </section>
+
+      <section class="panel">
+        <h2>空白ページ追加候補</h2>
+        {% if blank_page_suggestions %}
+          <ul class="note-list">
+            {% for item in blank_page_suggestions %}
+              <li>{{ item.after_order }}番目の「{{ item.after_filename }}」の後に1ページ追加</li>
+            {% endfor %}
+          </ul>
+
+          {% if insert_blank_pages %}
+            <p class="subtext">この候補は合計ページ数に反映済みです。</p>
+          {% else %}
+            <p class="subtext">この候補は表示のみで、合計ページ数には反映していません。</p>
+          {% endif %}
+        {% else %}
+          <p>空白ページの追加候補はありません。</p>
+        {% endif %}
+      </section>
+
+      <div class="actions">
+        <form action="{{ url_for('download_merged') }}" method="POST" class="download-form">
+          {% for pdf in selected_pdf_list %}
+            <input type="hidden" name="selected_pdf" value="{{ pdf.filename }}|{{ pdf.pages }}">
+          {% endfor %}
+          {% if insert_blank_pages %}
+            <input type="hidden" name="insert_blank_pages" value="on">
+          {% endif %}
+          <input type="hidden" name="output_filename" value="{{ output_filename }}">
+          <button type="submit" class="download-btn">結合PDFをダウンロード</button>
+        </form>
+
+        <a href="{{ url_for('index') }}" class="back-link">最初の画面へ戻る</a>
+        <a href="javascript:history.back()" class="sub-link">並び替え画面へ戻る</a>
+      </div>
+    {% else %}
+      <div class="empty-message">
+        <p>PDFが選択されていません。最初からやり直してください。</p>
+      </div>
+    {% endif %}
+  </div>
+</body>
+</html>
